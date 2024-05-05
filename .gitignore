@@ -1,0 +1,11 @@
+# secrets
+.secret
+.envrc
+
+contents.html
+latest_file/
+.venv
+
+# for auth
+sig.py
+auth.py
