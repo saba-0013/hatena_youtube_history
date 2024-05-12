@@ -9,3 +9,6 @@ latest_file/
 # for auth
 sig.py
 auth.py
+
+# python
+__pycache__
