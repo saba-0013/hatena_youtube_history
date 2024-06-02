@@ -12,9 +12,9 @@ import pandas as pd
 
 from base import Envs, Settings
 
-# subtitlesはdict in dictなためdfに入れる前に分解して投稿チャンネル名のみ取得する
-OUTPUT_KEYS = ["title", "titleUrl", "time", "subtitles"]
 BASE_URL = f"https://blog.hatena.ne.jp/{Envs.HATENA_ID}/{Envs.BLOG_DOMAIN}/atom"
+# NOTE: "subtitles"はdict in dictなためdfに入れる前に分解して投稿チャンネル名のみ取得する
+OUTPUT_KEYS = ["title", "titleUrl", "time", "subtitles"]
 
 
 # generate_auth
@@ -54,19 +54,26 @@ def generate_history_contents():
     ))
     print(f"data filtered in {Settings.LOWER_LIMIT} ~ {Settings.UPPER_LIMIT}")
 
-    # 視聴履歴にあるが非公開/削除された動画はsubtitleが取得できないため除外
+    # 視聴履歴から以下パターンを除外
+    # - 広告の再生履歴はtitleUrlが取得できなく不要なため除外
+    # - 非公開/削除された動画はsubtitleが取得できないため除外
     latest_history = []
     for c in latest_c:
-        tmp_ = {}
-        tmp_["title"] = c["title"]
-        tmp_["titleUrl"] = c["titleUrl"]
-        tmp_["time"] = c["time"]
-        subtitles_ = c.get("subtitles", None)
-        if subtitles_:
-            tmp_["channel"] = c["subtitles"][0]["name"]
-            latest_history.append(tmp_)
+        # 広告の再生履歴が入ったりするっぽい？確認
+        if not c.get("titleUrl", None):
+            print(c)
         else:
-            pass
+            tmp_ = {}
+            tmp_["title"] = c["title"]
+            tmp_["titleUrl"] = c["titleUrl"]
+            tmp_["time"] = c["time"]
+            subtitles_ = c.get("subtitles", None)
+            if subtitles_:
+                tmp_["channel"] = c["subtitles"][0]["name"]
+                latest_history.append(tmp_)
+            # 非公開/削除された動画
+            else:
+                pass
 
     for content_ in latest_history:
         content_["title"] = content_["title"].replace("を視聴しました", "")
@@ -75,7 +82,6 @@ def generate_history_contents():
     df_ = pd.DataFrame(latest_history)
     df_ = df_.groupby(["title", "titleUrl", "channel"])["time"].max().reset_index().sort_values("time", ascending=False)
     df_["embedUrl"] = df_["titleUrl"].str.replace("watch?v=", "/embed/")
-    df_.to_csv("test.csv", index=False)
     contents_ = df_.to_dict(orient="records")
 
     # generate HTML

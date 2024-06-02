@@ -9,13 +9,16 @@ from zoneinfo import ZoneInfo
 class Envs:
 
     # dropbox
+    # ref: https://dropbox-sdk-python.readthedocs.io/en/latest/
+    # ref: https://github.com/dropbox/dropbox-sdk-python/
     APP_KEY = os.environ["DBAppKey"]
     APP_SECRET = os.environ["DBAppSecret"]
     REFRESH_TOKEN = os.environ["DBRefreshToken"]
     
     # hatena
-    HATENA_ID = "jobstatus_is_null"
-    BLOG_DOMAIN = "jobstatus-is-null.hatenablog.com"
+    # ref: https://developer.hatena.ne.jp/ja/documents/blog/apis/atom/
+    HATENA_ID = os.environ["HatenaId"]
+    BLOG_DOMAIN = os.environ["HatenaDomain"]
     API_KEY = os.environ["HatenaApiKey"]
 
 @dataclass
