@@ -88,6 +88,8 @@ def generate_history_contents():
     doc_header = "<h3><strong>今週見た動画</strong></h3>"
     doc_contents = """
     <p>[:contents]</p>
+    <details>
+    <summary>開けば見える</summary>
     """
     docs_ = [doc_header, doc_contents]
     for i in contents_:
@@ -99,6 +101,8 @@ def generate_history_contents():
     """.format(title=i["title"], channel=i["channel"], url=i["titleUrl"])
 
         docs_.append(doc)
+    doc_footer = "</details>"
+    docs_.append(doc_footer)
     content_html = "".join(docs_)
 
     with open(Settings.HTML_PATH, mode="w") as f:
