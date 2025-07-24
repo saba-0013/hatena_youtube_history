@@ -1,6 +1,5 @@
 import base64
 import json
-import urllib.parse
 import urllib.request
 from datetime import datetime
 from xml.sax.saxutils import escape
@@ -15,7 +14,7 @@ from base import Envs, Settings
 BASE_URL = f"https://blog.hatena.ne.jp/{Envs.HATENA_ID}/{Envs.BLOG_DOMAIN}/atom"
 # NOTE: "subtitles"はdict in dictなためdfに入れる前に分解して投稿チャンネル名のみ取得する
 OUTPUT_KEYS = ["title", "titleUrl", "time", "subtitles"]
-
+TITLE_RANGE = f"{Settings.LOWER_LIMIT}~{Settings.UPPER_LIMIT}"
 
 # generate_auth
 rdbx = dropbox.Dropbox(
@@ -43,6 +42,73 @@ def download_latest_zip(dbx):
     
     return None
 
+# TODO:jinjaとかで作る
+def generate_history_html(contents):
+
+    # ヘッダー：tailwind読み込みとタイトル
+    # メインコンテンツ：動画サムネgrid
+    # サイドコンテンツ：追従動画タイトル/リンクテーブル
+
+    # generate HTML
+    doc_header = """
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <div class="text-3xl text-center m-4">
+        <p>{TITLE_RANGE}見た動画</p>
+    </div>
+    """.format(TITLE_RANGE=TITLE_RANGE)
+
+    doc_contents = ""
+    docs_ = [doc_header, doc_contents]
+
+    # ページ上に表示する以下2つを生成
+    # 1. ページ左サイドに表示するタイトル/リンクのテーブル
+    # 2. ページメインに表示するタイトル/リンク/サムネのコンテンツ羅列
+    top_open_tag = """<div class="grid grid-cols-5">"""
+    div_close_tag = """</div>"""
+    docs_.append(top_open_tag)
+    
+    main_objects = []
+    main_open_tag = """<div class="grid grid-cols-2 col-span-3 divide-y divide-black">"""
+    main_objects.append(main_open_tag)
+    table_objects = []
+    table_header = """<div class="h-120 col-span-2 overflow-auto p-4 m-4">
+        <table class="table-auto">
+            <thead>
+                <th class="sticky top-0 border-b pb-4"><p class="text-left">押すとサムネに飛ぶよ</p></th>
+            </thead>
+            <tbody>
+        """
+    table_close_tag = """</tbody></table></div>"""
+        
+    table_objects.append(table_header)
+    for i in contents:
+        main_obj = """
+            <div class="m-4 p-4">
+                <p id="{video_id}" class="text-sm"><strong>{title} / {channel}</strong></p>
+                <a href="{url}" class="text-blue-600"> {url} </a>
+                <img src="https://img.youtube.com/vi/{video_id}/sddefault.jpg" alt="">
+            </div>
+        """.format(title=i["title"], channel=i["channel"], url=i["titleUrl"], video_id=i["video_id"], )
+        
+        # table
+        table_obj = """
+            <tr class="border-b"><td><a href="#{video_id}"><p class="truncate pb-4">{title} / {channel}</p></a></td></tr>
+        """.format(title=i["title"], channel=i["channel"], video_id=i["video_id"])
+
+        main_objects.append(main_obj)
+        table_objects.append(table_obj)
+    main_objects.append(div_close_tag)
+    table_objects.append(table_close_tag)
+    docs_.extend(table_objects)
+    docs_.extend(main_objects)
+
+    docs_.append(div_close_tag)
+    content_html = "".join(docs_)
+
+    with open(Settings.HTML_PATH / f"{TITLE_RANGE}.html", mode="w") as f:
+        f.write(content_html)
+    return content_html
+
 def generate_history_contents():
 
     with open(Settings.JSON_PATH, "r") as f:
@@ -52,7 +118,7 @@ def generate_history_contents():
         lambda x: Settings.UPPER_LIMIT >= (datetime.fromisoformat(x["time"]).astimezone(ZoneInfo("Asia/Tokyo"))).date() >= Settings.LOWER_LIMIT,
         history_
     ))
-    print(f"data filtered in {Settings.LOWER_LIMIT} ~ {Settings.UPPER_LIMIT}")
+    print(f"data filtered in {TITLE_RANGE}")
 
     # 視聴履歴から以下パターンを除外
     # - 広告の再生履歴はtitleUrlが取得できなく不要なため除外
@@ -81,34 +147,10 @@ def generate_history_contents():
     # 複数回視聴している動画を最新のみに重複削除
     df_ = pd.DataFrame(latest_history)
     df_ = df_.groupby(["title", "titleUrl", "channel"])["time"].max().reset_index().sort_values("time", ascending=False)
-    df_["embedUrl"] = df_["titleUrl"].str.replace("watch?v=", "/embed/")
+    df_["video_id"] = df_["titleUrl"].apply(lambda x: x.split("watch?v\u003d")[-1])
     contents_ = df_.to_dict(orient="records")
 
-    # generate HTML
-    doc_header = "<h3><strong>今週見た動画</strong></h3>"
-    doc_contents = """
-    <p>[:contents]</p>
-    <details>
-    <summary>開けば見える</summary>
-    """
-    docs_ = [doc_header, doc_contents]
-    for i in contents_:
-        doc = """
-
-    <p> </p>
-    <h4><strong> {title} / {channel}</strong></h4>
-    <p> {url} </p>
-    """.format(title=i["title"], channel=i["channel"], url=i["titleUrl"])
-
-        docs_.append(doc)
-    doc_footer = "</details>"
-    docs_.append(doc_footer)
-    content_html = "".join(docs_)
-
-    with open(Settings.HTML_PATH, mode="w") as f:
-        f.write(content_html)
-    
-    return content_html
+    return contents_
 
 def post_hatena_entry(title, content):
     title = escape(title)
@@ -138,9 +180,10 @@ def post_hatena_entry(title, content):
 
 
 
-title = f"Youtubeで見た動画 {Settings.LOWER_LIMIT}~{Settings.UPPER_LIMIT}"
+title = f"Youtubeで見た動画 {TITLE_RANGE}"
 dbx = dropbox.Dropbox(ACCESS_TOKEN)
 download_latest_zip(dbx)
 c = generate_history_contents()
-res = post_hatena_entry(title, c)
-print(res)
+html_ = generate_history_html(c)
+# res = post_hatena_entry(title, c)
+# print(res)

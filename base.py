@@ -35,7 +35,7 @@ class Settings:
     JSON_PATH = Path(UNZIP_PATH / "Takeout/YouTube と YouTube Music/履歴/watch-history.json")
 
     # 生成htmlデータ出力先
-    HTML_PATH = Path("./contents.html")
+    HTML_PATH = Path("./docs/history/")
 
     # times
     CURRENT_TIMESTAMP = datetime.now(ZoneInfo("Asia/Tokyo"))
