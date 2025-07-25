@@ -10,6 +10,7 @@ import dropbox
 import pandas as pd
 
 from base import Envs, Settings
+from html_generator import generate_history_html, generate_index_html
 
 BASE_URL = f"https://blog.hatena.ne.jp/{Envs.HATENA_ID}/{Envs.BLOG_DOMAIN}/atom"
 # NOTE: "subtitles"はdict in dictなためdfに入れる前に分解して投稿チャンネル名のみ取得する
@@ -27,6 +28,7 @@ ACCESS_TOKEN = rdbx._oauth2_access_token
 
 
 def download_latest_zip(dbx):
+    # Googleデータエクスポート経由でdropboxに入ってきたzipの最新データのみ取得、解凍してlatest_file/に配置
 
     files_ = dbx.files_list_folder(path=Settings.FOLDER_PATH).entries
     latest_datetime = max(list(map(lambda x: x.client_modified, files_)))
@@ -42,74 +44,8 @@ def download_latest_zip(dbx):
     
     return None
 
-# TODO:jinjaとかで作る
-def generate_history_html(contents):
-
-    # ヘッダー：tailwind読み込みとタイトル
-    # メインコンテンツ：動画サムネgrid
-    # サイドコンテンツ：追従動画タイトル/リンクテーブル
-
-    # generate HTML
-    doc_header = """
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <div class="text-3xl text-center m-4">
-        <p>{TITLE_RANGE}見た動画</p>
-    </div>
-    """.format(TITLE_RANGE=TITLE_RANGE)
-
-    doc_contents = ""
-    docs_ = [doc_header, doc_contents]
-
-    # ページ上に表示する以下2つを生成
-    # 1. ページ左サイドに表示するタイトル/リンクのテーブル
-    # 2. ページメインに表示するタイトル/リンク/サムネのコンテンツ羅列
-    top_open_tag = """<div class="grid grid-cols-5">"""
-    div_close_tag = """</div>"""
-    docs_.append(top_open_tag)
-    
-    main_objects = []
-    main_open_tag = """<div class="grid grid-cols-2 col-span-3 divide-y divide-black">"""
-    main_objects.append(main_open_tag)
-    table_objects = []
-    table_header = """<div class="h-120 col-span-2 overflow-auto p-4 m-4">
-        <table class="table-auto">
-            <thead>
-                <th class="sticky top-0 border-b pb-4"><p class="text-left">押すとサムネに飛ぶよ</p></th>
-            </thead>
-            <tbody>
-        """
-    table_close_tag = """</tbody></table></div>"""
-        
-    table_objects.append(table_header)
-    for i in contents:
-        main_obj = """
-            <div class="m-4 p-4">
-                <p id="{video_id}" class="text-sm"><strong>{title} / {channel}</strong></p>
-                <a href="{url}" class="text-blue-600"> {url} </a>
-                <img src="https://img.youtube.com/vi/{video_id}/sddefault.jpg" alt="">
-            </div>
-        """.format(title=i["title"], channel=i["channel"], url=i["titleUrl"], video_id=i["video_id"], )
-        
-        # table
-        table_obj = """
-            <tr class="border-b"><td><a href="#{video_id}"><p class="truncate pb-4">{title} / {channel}</p></a></td></tr>
-        """.format(title=i["title"], channel=i["channel"], video_id=i["video_id"])
-
-        main_objects.append(main_obj)
-        table_objects.append(table_obj)
-    main_objects.append(div_close_tag)
-    table_objects.append(table_close_tag)
-    docs_.extend(table_objects)
-    docs_.extend(main_objects)
-
-    docs_.append(div_close_tag)
-    content_html = "".join(docs_)
-
-    with open(Settings.HTML_PATH / f"{TITLE_RANGE}.html", mode="w") as f:
-        f.write(content_html)
-    return content_html
-
 def generate_history_contents():
+    # history/で表示するhtmlとして整形するためにjsonほぐしてdf -> dictにしておく
 
     with open(Settings.JSON_PATH, "r") as f:
         history_ = json.load(f)
@@ -152,23 +88,24 @@ def generate_history_contents():
 
     return contents_
 
-def post_hatena_entry(title, content):
+def post_hatena_entry(title):
+    # 視聴履歴ページ自体はgithub pagesで作成するので、誘導リンクのみの記事を作成する
     title = escape(title)
-    content = escape(content)
+    # content = escape(content)
 
-    xml_data = """<?xml version="1.0" encoding="utf-8"?>
+    xml_data = f"""<?xml version="1.0" encoding="utf-8"?>
     <entry xmlns="http://www.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app">
     <title>{title}</title>
     <author><name></name></author>
     <content type="text/html">
-        {content}
+        今週： {Settings.PAGES_URL}/history/{TITLE_RANGE}.html
     </content>
     <category term="見たYoutube" />
     <app:control>
         <app:draft>yes</app:draft>
     </app:control>
     </entry>
-    """.format(title=title, content=content)
+    """
 
     url = BASE_URL + "/entry"
     xml_data = xml_data.encode('utf-8')
@@ -179,11 +116,11 @@ def post_hatena_entry(title, content):
     return response.status
 
 
-
 title = f"Youtubeで見た動画 {TITLE_RANGE}"
 dbx = dropbox.Dropbox(ACCESS_TOKEN)
 download_latest_zip(dbx)
 c = generate_history_contents()
-html_ = generate_history_html(c)
-# res = post_hatena_entry(title, c)
-# print(res)
+history_html = generate_history_html(c)
+index_ = generate_index_html()
+res = post_hatena_entry(title)
+print(res)

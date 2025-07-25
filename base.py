@@ -35,7 +35,11 @@ class Settings:
     JSON_PATH = Path(UNZIP_PATH / "Takeout/YouTube と YouTube Music/履歴/watch-history.json")
 
     # 生成htmlデータ出力先
-    HTML_PATH = Path("./docs/history/")
+    INDEX_PATH = Path("./docs/")
+    HISTORY_PATH = Path("./docs/history/")
+
+    # github pagesのURL
+    PAGES_URL = "https://saba-0013.github.io/hatena_youtube_history"
 
     # times
     CURRENT_TIMESTAMP = datetime.now(ZoneInfo("Asia/Tokyo"))
