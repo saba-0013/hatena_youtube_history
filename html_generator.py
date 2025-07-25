@@ -24,7 +24,7 @@ def generate_index_html():
     for period in Settings.HISTORY_PATH.iterdir():
         print(period)
         listing_items = f"""
-        <li><a href="/history/{period.name}">{period.stem}</a></li>       
+        <li><a href="history/{period.name}">{period.stem}</a></li>       
         """
 
     docs_ = [doc_header, listing_open, listing_items, listing_close]
