@@ -7,6 +7,7 @@ def generate_index_html():
     # トップにタイトルとliでperiod別リンクがついてる奴
     # /history/下ファイル取得
     listing = Settings.HISTORY_PATH
+    listings = []
     
     doc_header = """
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -21,13 +22,16 @@ def generate_index_html():
     listing_close = """
     </ul></div>
     """
-    for period in Settings.HISTORY_PATH.iterdir():
+    docs_ = [doc_header, listing_open]
+
+    for period in listing.iterdir():
         print(period)
-        listing_items = f"""
+        listing_item = f"""
         <li><a href="history/{period.name}">{period.stem}</a></li>       
         """
+        docs_.append(listing_item)
 
-    docs_ = [doc_header, listing_open, listing_items, listing_close]
+    docs_.append(listing_close)
     content_html = "".join(docs_)
     with open(f"{Settings.INDEX_PATH}/index.html", mode="w") as f:
         f.write(content_html)
@@ -61,14 +65,24 @@ def generate_history_html(contents):
     main_open_tag = """<div class="grid grid-cols-2 col-span-3 divide-y divide-black">"""
     main_objects.append(main_open_tag)
     table_objects = []
-    table_header = """<div class="h-120 col-span-2 overflow-auto p-4 m-4">
-        <table class="table-auto">
-            <thead>
-                <th class="sticky top-0 border-b pb-4"><p class="text-left">押すとサムネに飛ぶよ</p></th>
-            </thead>
-            <tbody>
+    table_header = """
+        <div class="sticky top-0 h-150 grid grid-rows col-span-2 p-4 m-4">
+            <div class="overflow-auto">
+                <table class="table-auto">
+                    <thead>
+                        <th class="sticky top-0 border-b pb-4"><p class="text-left">押すとサムネに飛ぶよ</p></th>
+                    </thead>
+                    <tbody>
         """
-    table_close_tag = """</tbody></table></div>"""
+    table_close_tag = """
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-blue-600 p-4 text-3xl">
+                <a href="../index.html">トップページへ戻るよ</a>
+            </div>
+        </div>
+    """
         
     table_objects.append(table_header)
     for i in contents:
@@ -76,7 +90,7 @@ def generate_history_html(contents):
             <div class="m-4 p-4">
                 <p id="{video_id}" class="text-sm"><strong>{title} / {channel}</strong></p>
                 <a href="{url}" class="text-blue-600"> {url} </a>
-                <img src="https://img.youtube.com/vi/{video_id}/sddefault.jpg" alt="">
+                <img src="https://img.youtube.com/vi/{video_id}/sddefault.jpg" alt="" loading="lazy">
             </div>
         """.format(title=i["title"], channel=i["channel"], url=i["titleUrl"], video_id=i["video_id"], )
         
