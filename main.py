@@ -88,10 +88,30 @@ def generate_history_contents():
 
     return contents_
 
-def post_hatena_entry(title):
+def post_hatena_entry(title, content):
     # 視聴履歴ページ自体はgithub pagesで作成するので、誘導リンクのみの記事を作成する
     title = escape(title)
-    # content = escape(content)
+
+    # generate HTML
+    doc_header = "<h3><strong>今週見た動画</strong></h3>"
+    doc_contents = """
+    <details>
+    <summary>開けば見える</summary>
+    """
+    docs_ = [doc_header, doc_contents]
+    for i in content:
+        doc = """
+
+    <p> </p>
+    <h4><strong> {title} / {channel}</strong></h4>
+    <p> {url} </p>
+    """.format(title=i["title"], channel=i["channel"], url=i["titleUrl"])
+
+        docs_.append(doc)
+    doc_footer = "</details>"
+    docs_.append(doc_footer)
+    content_html = "".join(docs_)
+    content_html = escape(content_html)
 
     xml_data = f"""<?xml version="1.0" encoding="utf-8"?>
     <entry xmlns="http://www.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app">
@@ -99,6 +119,7 @@ def post_hatena_entry(title):
     <author><name></name></author>
     <content type="text/html">
         今週： {Settings.PAGES_URL}/history/{TITLE_RANGE}.html
+        {content_html}
     </content>
     <category term="見たYoutube" />
     <app:control>
@@ -122,5 +143,5 @@ download_latest_zip(dbx)
 c = generate_history_contents()
 history_html = generate_history_html(c)
 index_ = generate_index_html()
-res = post_hatena_entry(title)
+res = post_hatena_entry(title, c)
 print(res)
