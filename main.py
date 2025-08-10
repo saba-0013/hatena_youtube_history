@@ -30,7 +30,7 @@ ACCESS_TOKEN = rdbx._oauth2_access_token
 def download_latest_zip(dbx):
     # Googleデータエクスポート経由でdropboxに入ってきたzipの最新データのみ取得、解凍してlatest_file/に配置
 
-    files_ = dbx.files_list_folder(path=Settings.FOLDER_PATH).entries
+    files_ = [i for i in dbx.files_list_folder(path=Settings.FOLDER_PATH).entries if i.path_lower.endswith("-1-001.zip")]
     latest_datetime = max(list(map(lambda x: x.client_modified, files_)))
     print(latest_datetime)
 
