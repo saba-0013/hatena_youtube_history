@@ -45,9 +45,11 @@ def generate_history_html(contents):
     # generate HTML
     doc_header = """
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <div class="text-3xl text-center m-4">
-        <p>{TITLE_RANGE}見た動画</p>
-    </div>
+    <div class="bg-gray-700">
+        <div class="bg-gray-800 sticky top-0 flex">
+            <a href="../index.html" class="p-3"><img src="../home.svg" alt=""></a>
+            <p class="text-2xl text-center p-3 text-white flex-1">{TITLE_RANGE}見た動画</p>
+        </div>
     """.format(TITLE_RANGE=TITLE_RANGE)
 
     doc_contents = ""
@@ -55,17 +57,17 @@ def generate_history_html(contents):
 
     # ページ上に表示する以下2つを生成
     # 2. ページメインに表示するタイトル/リンク/サムネのコンテンツ羅列
-    top_open_tag = """<div class="grid grid-cols-5">"""
+    top_open_tag = """<div class="grid lg:grid-cols-3 grid-cols-2">"""
     div_close_tag = """</div>"""
     docs_.append(top_open_tag)
     
     main_objects = []
-    main_open_tag = """<div class="grid grid-cols-2 col-span-3 divide-y divide-black">"""
+    main_open_tag = """<div class="lg:m-8 grid lg:grid-cols-3 grid-cols-2 lg:col-span-3 col-span-2 divide-y divide-white">"""
     main_objects.append(main_open_tag)
     for i in contents:
         main_obj = """
             <div class="m-4 p-4">
-                <p id="{video_id}" class="text-sm"><strong>{title} / {channel}</strong></p>
+                <p id="{video_id}" class="text-sm text-white"><strong>{title} / {channel}</strong></p>
                 <a href="{url}" class="text-blue-600"> {url} </a>
                 <img src="https://img.youtube.com/vi/{video_id}/sddefault.jpg" alt="" loading="lazy">
             </div>
@@ -80,6 +82,7 @@ def generate_history_html(contents):
     main_objects.append(div_close_tag)
     docs_.extend(main_objects)
 
+    docs_.append(div_close_tag)
     docs_.append(div_close_tag)
     content_html = "".join(docs_)
 
