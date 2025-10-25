@@ -7,20 +7,26 @@ def generate_index_html():
     # トップにタイトルとliでperiod別リンクがついてる奴
     # /history/下ファイル取得
     listing = Settings.HISTORY_PATH
-    listings = []
     
     doc_header = """
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <div class="text-3xl text-center m-4">
-        <p>youtubeで見た動画たち</p>
-    </div>
+    <div class="min-h-screen bg-gray-800">
+        <div class="sticky top-0">
+            <div class="text-3xl text-center text-white p-3">
+                <p>youtubeで見た動画たち</p>
+            </div>
+        </div>
     """
 
     listing_open = """
-    <div class="p-8"><ul class="text-blue-600">
+    <div class="p-8">
+        <ul class="text-blue-400">
     """
     listing_close = """
     </ul></div>
+    """
+    div_close = """
+    </div>
     """
     docs_ = [doc_header, listing_open]
 
@@ -32,6 +38,7 @@ def generate_index_html():
         docs_.append(listing_item)
 
     docs_.append(listing_close)
+    docs_.append(div_close)
     content_html = "".join(docs_)
     with open(f"{Settings.INDEX_PATH}/index.html", mode="w") as f:
         f.write(content_html)
