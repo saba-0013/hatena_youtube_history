@@ -65,6 +65,10 @@ def generate_history_contents():
         # 広告の再生履歴が入ったりするっぽい？確認
         if not c.get("titleUrl", None):
             print(c)
+        elif c.get("activityControls", None) == "Youtube の検索履歴":
+            print(c)
+        elif "高く評価しました" in c.get("title", None) or "共有動画" in c.get("title", None):
+            print(c)
         else:
             tmp_ = {}
             tmp_["title"] = c["title"]
@@ -77,6 +81,22 @@ def generate_history_contents():
             # 非公開/削除された動画
             else:
                 pass
+    # for c in latest_c:
+    #     # 広告の再生履歴が入ったりするっぽい？確認
+    #     if not c.get("titleUrl", None):
+    #         print(c)
+    #     else:
+    #         tmp_ = {}
+    #         tmp_["title"] = c["title"]
+    #         tmp_["titleUrl"] = c["titleUrl"]
+    #         tmp_["time"] = c["time"]
+    #         subtitles_ = c.get("subtitles", None)
+    #         if subtitles_:
+    #             tmp_["channel"] = c["subtitles"][0]["name"]
+    #             latest_history.append(tmp_)
+    #         # 非公開/削除された動画
+    #         else:
+    #             pass
 
     for content_ in latest_history:
         content_["title"] = content_["title"].replace("を視聴しました", "")

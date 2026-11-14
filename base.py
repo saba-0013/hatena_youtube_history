@@ -32,7 +32,8 @@ class Settings:
     # localへ落としてきた履歴データ保存先
     DOWNLOAD_PATH = Path("./latest_file/latest.zip")
     UNZIP_PATH = Path("./latest_file/latest")
-    JSON_PATH = Path(UNZIP_PATH / "Takeout/YouTube と YouTube Music/履歴/watch-history.json")
+    JSON_PATH = Path(UNZIP_PATH / "Takeout/マイ アクティビティ/YouTube/マイアクティビティ.json")
+    # JSON_PATH = Path(UNZIP_PATH / "Takeout/YouTube と YouTube Music/履歴/watch-history.json")
 
     # 生成htmlデータ出力先
     INDEX_PATH = Path("./docs/")
