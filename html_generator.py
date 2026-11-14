@@ -30,6 +30,14 @@ def generate_index_html():
     """
     docs_ = [doc_header, listing_open]
 
+    blog_li = """
+    <li><a href="https://jobstatus-is-null.hatenablog.com/entry/2025/07/26/003047">日記</a></li>
+    """
+    github_li = """
+    <li><a href="https://github.com/saba-0013/hatena_youtube_history">ソースのrepository</a></li>
+    """
+    docs_.append(blog_li)
+    docs_.append(github_li)
     for period in sorted(listing.iterdir(), reverse=True):
         print(period)
         listing_item = f"""
@@ -74,7 +82,7 @@ def generate_history_html(contents):
     for i in contents:
         main_obj = """
             <div class="m-4 p-4">
-                <p id="{video_id}" class="text-sm text-white"><strong>{title} / {channel}</strong></p>
+                <p id="{video_id}" class="text-xl lg:text-sm text-white"><strong>{title} / {channel}</strong></p>
                 <a href="{url}" class="text-blue-600"> {url} </a>
                 <img src="https://img.youtube.com/vi/{video_id}/sddefault.jpg" alt="" loading="lazy">
             </div>

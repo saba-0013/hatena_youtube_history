@@ -30,7 +30,8 @@ ACCESS_TOKEN = rdbx._oauth2_access_token
 def download_latest_zip(dbx):
     # Googleデータエクスポート経由でdropboxに入ってきたzipの最新データのみ取得、解凍してlatest_file/に配置
 
-    files_ = [i for i in dbx.files_list_folder(path=Settings.FOLDER_PATH).entries if i.path_lower.endswith("-3-001.zip")]
+    # files_ = [i for i in dbx.files_list_folder(path=Settings.FOLDER_PATH).entries if i.path_lower.endswith("-2-001.zip")]
+    files_ = [i for i in dbx.files_list_folder(path=Settings.FOLDER_PATH).entries if i.path_lower.endswith("-1-001.zip")]
     latest_datetime = max(list(map(lambda x: x.client_modified, files_)))
     print(latest_datetime)
 
@@ -114,7 +115,7 @@ def post_hatena_entry(title, content):
     content_html = escape(content_html)
 
     xml_data = f"""<?xml version="1.0" encoding="utf-8"?>
-    <entry xmlns="http://www.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app">
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app">
     <title>{title}</title>
     <author><name></name></author>
     <content type="text/html">
